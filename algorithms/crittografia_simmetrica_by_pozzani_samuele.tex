@@ -1,0 +1,176 @@
+\documentclass{article}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+\usepackage{graphicx}
+
+\begin{document}
+
+	\pagenumbering{gobble}
+	\begin{titlepage}
+
+		\raggedleft
+	
+		\rule{1pt}{\textheight} 
+		\hspace{0.05\textwidth} 
+		\parbox[b]{0.80\textwidth}{
+
+			{\Huge\bfseries Crittografia simmetrica \\[0.5\baselineskip]e algoritmo DES}\\[2\baselineskip] 
+			{\large\textit{Con analisi degli algoritmi}}\\[4\baselineskip] 
+			{\Large\textsc{Samuele Pozzani}} 
+			
+			\vspace{0.5\textheight} 
+			
+			{\noindent Alcune parti di testo presenti in questo documento potrebbero essere protette da Copyright e sono state utilizzate a puro scopo didattico.}\\[\baselineskip]
+		}
+
+	\end{titlepage}
+	\newpage
+
+	\pagenumbering{arabic}
+	\tableofcontents
+	\newpage
+
+	\section{Introduzione}
+
+		\paragraph{}
+		Con \textbf{crittografia simmetrica}, o \textbf{crittografia a chiave privata}, si intende una tecnica di \textbf{cifratura}. Rappresenta un metodo semplice per cifrare testo in chiaro dove la chiave di crittazione è la stessa chiave di decrittazione, rendendo l'algoritmo molto performante e semplice da implementare. Tuttavia presuppone che le due parti siano già in possesso delle chiavi, richiesta che non rende possibile uno scambio di chiavi con questo genere di algoritmi. Lo scambio avviene attraverso algoritmi a chiave asimmetrica o pubblica, generalmente più complessi sia da implementare che da eseguire ma permettono questo scambio in modo sicuro. Dopodiché la comunicazione verrà crittata usando solo algoritmi a chiave simmetrica per garantire una comunicazione sicura ma veloce.
+
+	\section{Funzionamento}
+
+		\paragraph{}
+		In questo genere di algoritmi si suppone che entrambe le parti conoscano già la chiave con cui crittare e decrittare il messaggio. Il mittente ha un messaggio \textbf{P} (PlainText o testo in chiaro). Il mittente critta il messaggio \textbf{P} con la chiave \textbf{k} usando un algoritmo di crittografia simmetrica chiamato \textbf{S}. Il messaggio risultante sarà \textbf{C} (CypherText o messaggio cifrato). In formule diventa:
+		\begin{equation*}
+			S(P,k) = C
+		\end{equation*}
+		\paragraph{}
+		A questo punto al destinatario arriva un messaggio cifrato che riesce a decrittare poiché è in possesso della chiave privata. Ora il ricevente applica l'algoritmo di decrittazione \textbf{D} con la stessa chiave che ha usato il mittente per crittare il testo. Diventa:
+		\begin{equation*}
+			D(C,k) = P
+		\end{equation*}
+		\paragraph{}
+		Se un attaccante ha intercettato il messaggio lungo il mezzo di comunicazione, avrà il messaggio crittato ma non la chiave che è stata scambiata in modo sicuro dai due interlocutori. Se l'attaccante vorrà leggere il messaggio crittato potrà solo usare metodi di decrittazione che richiedono elevate capacità di calcolo.
+		\paragraph{}
+		Nel caso di una comunicazione reale, questo colloquio viene criptato tramite un algoritmo a chiave pubblica, più complesso ma che non richiede nessuna trasmissione della chiave sul mezzo di comunicazione.
+
+	\section{Componenti comuni nelle varie implementazioni}
+
+		\paragraph{}
+		Tra i vari algoritmi di crittazione possiamo trovare alcune operazioni comuni, poiché aggiungono generalmente maggior sicurezza nel testo cifrato e sono operazioni rapide per la macchina.
+		\paragraph{}
+		Spesso una stessa operazione viene ciclata più volte, riferendosi a questi passaggi come \textbf{cicli} o \textbf{round}. Ad esempio in AES la stessa routine viene ripetuta 10 volte. In DES il testo in chiaro subisce 16 volte la crittazione insieme alla chiave prima di terminare. Una volta disegnato l'algoritmo viene molto facile ripeterlo, rendendo più complesso un lavoro di decrittazione forzata tramite brute force. Se l'algoritmo di decrittazione è ben disegnato e non si riescono ad avere informazioni sulla chiave, questo è l'unico metodo attraverso cui è possibile la decrittazione del messaggio cifrato.
+		\paragraph{}
+		Tra i vari algoritmi simmetrici possiamo riconoscere alcuni parametri standard come la \textbf{lunghezza della chiave} e la \textbf{dimensione del blocco}.
+		\paragraph{}
+		La lunghezza della chiave è misurata in bit e ha valori che oscillano tra 32 bit e 512 bit. Generalmente la lunghezza della chiave è un valore fisso nonostante esistano alcuni algoritmi come AES che impiegano lunghezze variabili.
+		\paragraph{}
+		Ogni algoritmo generalmente cerca di crittare una stringa di bit attraverso una chiave in un'altra stringa di bit della medesima lunghezza. La lunghezza di questa stringa è pari alla dimensione del blocco. Algoritmi più datati avevano questo valore pari a 64bit in media. Oggi si preferisce adottare dimensioni di 128 bit.
+		\paragraph{}
+		Un problema che affligge la dimensione del blocco è il paradosso del compleanno che rilascia informazioni sulla chiave ogni volta che avviene una collisione. Possiamo ritenere sicura solo la radice quadrata di tutte le combinazioni possibili. Per esempio con una dimensione di 64 bit, che genererebbe \textbf{2\textsuperscript{64}} possibili combinazioni, potremo impiegarne solo \textbf{2\textsuperscript{32}} prima di cominciare a rivelare informazioni sulla chiave.
+
+	\section{Metodi di Crittazione a Blocchi di Cifre}
+
+		\paragraph{}
+		Generalmente la dimensione del blocco scelta è della medesima lunghezza della chiave perché risulta semplice per l'implementazione di un algoritmo. Tuttavia è bene fare attenzione ad alcuni metodi che possono compromettere la sicurezza dell'algoritmo. Nei seguenti algoritmi individuiamo \newline \newline
+		\textbf{k\textsubscript{i}} è l'i-esima cifra della chiave \newline
+		\textbf{P\textsubscript{i}} è l'i-esima cifra del testo in chiaro \newline 
+		\textbf{C\textsubscript{i}} è l'i-esima cifra del testo cifrato \newline \newline
+		con \newline \newline
+		\textbf{i} = 1...n \newline
+		n = dimensione del blocco e lunghezza della chiave
+
+		\subsection{Electronic Code Book (ECB)}
+
+			\begin{equation*}
+				S(P_i,k_i) = C_i
+			\end{equation*}
+			\paragraph{}
+			È l'implementazione più semplice, in cui l'unica cosa che nasconde il testo in chiaro è una cifra della chiave. Questo metodo risulta essere tanto semplice quanto insicuro. Infatti è sufficiente per l'attaccante raccogliere un numero sufficiente di campioni per scoprire la chiave. Su questo metodo si basa il Cifrario di Cesare.
+
+		\subsection{Cipher Block Chaining (CBC)}
+
+			\begin{align*}
+				&S((IV \oplus P_1), K_1) = C_1\\
+				&S((C_i-1 \oplus P_i), K_i) = C_i
+			\end{align*}
+			\paragraph{}
+			In questo metodo si aggiunge un fattore di casualità inserendo nell'algoritmo anche la cifra precedentemente crittata; più precisamente, si effettua uno XOR prima di crittare il testo. In questo modo non vi è una associazione univoca tra chiave e testo in chiaro ma si aggiunge la dipendenza dalla cifra precedente. Inserendo la dipendenza dalla cifra precedente, si crea la necessità di aggiungere un elemento per crittare la prima cifra del blocco, chiamata Vettore di Inizializzazione (IV nelle formule).
+
+			\subsubsection{Cipher Feed-Back (CFB)}
+
+				\begin{align*}
+				&S(IV,k_1) \oplus P_1 = C_1\\
+				&S(C_i-1,k_i) \oplus P_i = C_i
+				\end{align*}
+				\paragraph{}
+				Molto simile al CBC ma l'operazione di XOR con il testo in chiaro viene eseguita dopo la crittazione. Si critta prima la chiave con la cifra precedente o il Vettore di Inizializzazione nel caso della prima cifra. RIspetto a CBC è sempre presente la dipendenza dalla cifra precedente, ma soffre ancora del Problema di Malleabilità, anche se solo localmente alla singole cifra.
+
+	\section{Algoritmi}
+
+		\subsection{DES (Data Encryption Standard)}
+
+			\paragraph{}
+			Impiega una chiave di 56 bit e opera su blocchi di 64 bit. DES è uno degli algoritmi a chiave simmetrica più famoso, pubblicato nel 1976 da IBM e scelto come standard per la Federal Information Processing Standard. È diventato in seguito lo standard fino a quando non fu decrittato nel 1997 in 3 giorni di calcolo. Nell'anno successivo fu sufficiente un giorno soltanto impiegando un cluster di computer e con l'avanzare i tempi si riducono ulteriormente. Il suo successore fu 3DES.
+
+		\subsection{3DES (Triple DES)}
+
+			\paragraph{}
+			Quando DES non fu più sicuro, si cercò un metodo che mantenesse le meccaniche del DES ma che permettesse di avere una chiave più lunga. In questo algoritmo si esegue una tripla crittazione impiegando 3 chiavi DES standard, a 56 bit, ottenendo una chiave a 168 bit. È possibile anche invertire il secondo passaggio, ovvero eseguire una crittazione e una decrittazione. Tuttavia non modifica la sicurezza generale dell'algoritmo.
+			\paragraph{}
+			Anche questo algoritmo oggi non viene più impiegato poiché le tecnologie si stanno evolvendo e molti algoritmi di crittazione non risultano abbastanza forti da sopportare le elevate capacità di calcolo dei computer moderni, soprattutto con l'avvento delle GPGPU. 3DES ha lasciato il posto a AES, il nuovo standard ormai.
+
+		\subsection{AES (Advanced Encryption Standard)}
+
+			\paragraph{}
+			Nel 1999 si presentarono vari algoritmi candidati a diventare lo standard di crittografia simmetrica. Questi candidati furono MARS proposto dalla IBM, RC6, Serpent, Twofish e Rijndael. Tutti questi algoritmi furono testati per efficienza e sicurezza su varie architetture, sia hardware che software. Tra questi ricevette un feedback positivo Rijndael che nel 2000 divenne il nuovo standard con il nome di AES. Fu dapprima impiegato dal governo degli USA e dopodiché il suo successo divenne globale.
+			\paragraph{}
+			AES lavora su blocchi a dimensione fissa di 128 bit. Ha una chiave di 128 bit ma possono essere impiegate chiavi più lunghe da 192 e 256 bit per crittare documenti di particolare importanza.
+
+		\vfill
+			Fonte: it.wikipedia.org
+
+		\newpage
+
+	\section{Algoritmo DES}
+
+		\paragraph{}
+		In crittografia il Data Encryption Standard (DES) è un algoritmo di cifratura scelto come standard dal Federal Information Processing Standard (FIPS) per il governo degli Stati Uniti d'America nel 1976 e in seguito diventato di utilizzo internazionale. Si basa su un algoritmo a chiave simmetrica con chiave a 64 bit (ma solo 56 utili poiché 8 sono di controllo).
+
+		\subsection{Come funziona l'algoritmo}
+
+			\paragraph{}
+			L'algoritmo di crittazione DES elabora il messaggio dividendolo in blocchi da 64 bit permutandoli in 2\textsuperscript{64} possibili combinazioni. Inizialmente il blocco di 64 bit viene diviso in due parti da 32 bit L e R. Anche la chiave di crittografia deve essere di 64 bit.\newline
+			Esempio: Il messaggio M è 0123456789ABCDEF in esadecimale, quindi in formato binario: \newline
+			M = 0000 0001 0010 0011 0100 0101 0110 0111 1000 1001 1010 1011 1100 1101 1110 1111 \newline
+			L = 0000 0001 0010 0011 0100 0101 0110 0111 \newline
+			R = 1000 1001 1010 1011 1100 1101 1110 1111
+			
+			\subsubsection{Passo 1: Creazione di 16 sottochiavi}
+
+				\paragraph{}
+				Per prima cosa la chiave K è permutata attraverso una tabella detta PC-1. PC-1 contiene solamente 56 numeri, infatti la chiave permutata conterrà 56 bit poichè l'ottavo bit di ogni byte viene usato come controllo di parità. Se il primo numero di PC-1 è 57 significa che il primo bit dalla chiave permutata K+ è il 57-esimo bit della chiave K. \newline
+				Successivamente K+ viene divisa in due blocchi da 28 bit: C\textsubscript{0} e D\textsubscript{0}.
+				\paragraph{}
+				A questo punto, in accordo con una tabella di iterazione, C\textsubscript{0} e D\textsubscript{0} subiscono 16 rotazioni verso sinistra fino ad arrivare a C\textsubscript{16} e D\textsubscript{16} che sono uguali a C\textsubscript{0} e D\textsubscript{0}. Vengono poi concatenate le chiavi C\textsubscript{n} e D\textsubscript{n} ottenendo così 16 chiavi da 56 bit. \newline
+				Ognuna di queste chiavi viene poi permutata attraverso una nuova tabella PC-2 (che contiene solamente 48 bit) nella stessa modalità della precedente permutazione. Da ciò si ottengono le 16 sottochiavi K\textsubscript{n} da 48 bit ciascuna.
+
+			\subsubsection{Passo 2: Codifica dei blocchi del messaggio}
+
+				\paragraph{}
+				Inizialmente il messaggio M viene permutato attraverso la tabella IP e poi viene diviso in L\textsubscript{0} e R\textsubscript{0}, entrambi da 32 bit. \newline
+				Ora si procede attraverso 16 iterazioni usando la funzione f che opera su due blocchi del messaggio da 32 bit e una sottochiave da 48 bit. \newline
+				Quindi, con 1 <= n <= 16:
+				\begin{align*}
+				&L_n = R_(n-1)\\
+				&R_n = L_(n-1) \oplus f(R_(n-1), K_n)
+				\end{align*}
+				\paragraph{}
+				La funzione f prevede che venga inizialmente eseguito uno XOR tra il blocco del messaggio e la sottochiave; per fare ciò il blocco del messaggio deve essere permutato in modo da raggiungere i 48 bit della sottochiave grazie alla tabella E. A questo punto è possibile calcolare lo XOR bit a bit. \newline
+				La funzione f non termina qui: sono ora necessarie le 8 S-tables per far tornare la lunghezza del blocco a 32 bit. Il risultato dello XOR si può dividere in 8 blocchi da 6 bit ciascuno; in ogni blocco viene preso il primo e l'ultimo bit che, uniti, indicano il numero della riga (da 0 a 3); poi vengono presi i 4 bit centrali che indicano il numero della colonna (da 0 a 15). Grazie a queste coordinate è possibile trovare un numero (di 4 bit) all'interno delle S-tables che andrà a sostituire il blocco di partenza. Una volta fatto ciò per tutti gli 8 blocchi si ottiene una stringa da 32 bit. A questo punto l'ultima stringa da 32 bit viene permutata attraverso la tabella P e R\textsubscript{n} diventa la XOR tra L\textsubscript{n-1} e il risultato della funzione f.
+				\paragraph{} 
+				L'ultimo passo sta nel concatenare R\textsubscript{16} con L\textsubscript{16} e permutarlo attraverso l'ultima tabella IP\textsuperscript{-1}. Per decodificare il messaggio è necessario seguire la stessa procedura inverttendo l'ordine in cui le sottochiavi vengo applicate.
+
+
+
+\end{document}
